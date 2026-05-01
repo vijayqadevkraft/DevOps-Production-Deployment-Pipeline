@@ -112,3 +112,7 @@ Add screenshots after first deployment:
 
 > Deployed a production-ready DevOps pipeline on AWS with CI/CD, Docker, Nginx, and monitoring stack (Prometheus + Grafana + Loki), with automated deployment and centralized logging.
 
+
+## DevOps Daily Operations Guide
+
+- Detailed practical daily task list: `docs/devops-daily-operations-playbook.md`
