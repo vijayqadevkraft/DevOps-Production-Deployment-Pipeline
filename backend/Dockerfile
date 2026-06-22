@@ -1,4 +1,3 @@
-# Backward-compatible API image for CI systems that build the repository root.
 FROM node:20-alpine
 WORKDIR /app
 COPY backend/package*.json ./
