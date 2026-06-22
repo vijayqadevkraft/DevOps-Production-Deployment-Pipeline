@@ -1,118 +1,135 @@
-# DevOps Production Deployment Pipeline
+# MERN CRM System with DevOps Deployment Pipeline
 
-Production-style DevOps project demonstrating end-to-end CI/CD, containerization, reverse proxying, and observability on AWS.
+A full end-to-end Customer Relationship Management (CRM) web app built with the MERN stack and packaged for production-style deployment with Docker Compose, Nginx, MongoDB, Prometheus, Grafana, Loki, and Promtail.
 
-## Project Overview
+## Features
 
-This repository provides a practical baseline for deploying a Dockerized web app to AWS EC2 with automated CI/CD and a monitoring/logging stack.
-
-## Architecture Diagram
-
-```text
-Developer Push
-    |
- GitHub Repository
-    |
- GitHub Actions CI/CD
-    |
- Build & Push Docker Image
-    |
- Deploy to AWS EC2
-    |
- docker-compose up
-    |
-+---------+      +-----------+
-|  Nginx  | ---> |    App    |
-+---------+      +-----------+
-      |                |
-      +--------+-------+
-               |
-      +---------------------+
-      | Monitoring & Logs   |
-      | Prometheus/Grafana  |
-      | Loki + Promtail     |
-      +---------------------+
-```
+- JWT authentication with registration, login, and current-user profile endpoints.
+- Customer CRUD for leads, prospects, active customers, and inactive accounts.
+- Search and status filtering across customer name, company, and email.
+- Dashboard metrics for total customers, pipeline value, and prospect counts.
+- Responsive React interface for sales and account-management workflows.
+- Containerized API, web client, database, reverse proxy, metrics, and logs.
 
 ## Tech Stack
 
-- **Cloud**: AWS EC2
-- **Containers**: Docker, Docker Compose
-- **CI/CD**: GitHub Actions
+- **Frontend**: React, Vite, CSS, Lucide icons
+- **Backend**: Node.js, Express, Mongoose, JWT, Helmet, CORS, rate limiting
+- **Database**: MongoDB
 - **Web Proxy**: Nginx
+- **Containers**: Docker, Docker Compose
 - **Monitoring**: Prometheus, Grafana
 - **Logging**: Loki, Promtail
-- **App**: Python Flask
+
+## Architecture
+
+```text
+Browser
+  |
+  v
+Nginx / React SPA  ---- /api/* ----> Express API ----> MongoDB
+  |                                      |
+  +---------------- Observability -------+
+                 Prometheus / Grafana / Loki
+```
 
 ## Repository Structure
 
 ```text
 project/
- ├── app/
- ├── Dockerfile
- ├── docker-compose.yml
- ├── nginx/
- ├── .github/workflows/deploy.yml
+ ├── backend/                 # Express API, Mongo models, auth, CRM routes
+ ├── frontend/                # React + Vite CRM interface
+ ├── nginx/                   # Nginx SPA and API reverse proxy config
+ ├── docker-compose.yml       # CRM app + database + observability services
  ├── prometheus/
  ├── grafana/
- └── README.md
+ ├── promtail/
+ └── docs/
 ```
 
-> Note: In this repo, `project/` is the repository root.
+## Local Development
 
-## CI/CD Flow
-
-1. Push code to `main`.
-2. GitHub Actions builds Docker image and pushes to Docker Hub.
-3. Workflow connects to EC2 through SSH.
-4. EC2 pulls latest image and restarts services with Docker Compose.
-5. Prometheus scrapes metrics; Grafana dashboards visualize health.
-
-## Deployment Steps
-
-### 1) Create AWS EC2 instance
-
-- Ubuntu 22.04 LTS
-- Open ports: `22`, `80`, `3000`, `9090`, `3100`
-
-### 2) Install runtime on EC2
+### 1) Start MongoDB
 
 ```bash
-sudo apt update
-sudo apt install -y docker.io docker-compose-plugin
-sudo usermod -aG docker $USER
+docker compose up -d mongo
 ```
 
-### 3) Configure GitHub Secrets
+### 2) Run the backend
 
-- `DOCKERHUB_USERNAME`
-- `DOCKERHUB_TOKEN`
-- `EC2_HOST`
-- `EC2_USER`
-- `EC2_SSH_KEY`
+```bash
+cd backend
+cp .env.example .env
+npm install
+npm run dev
+```
 
-### 4) Copy compose + configs to EC2
+### 3) Seed demo data
 
-Place this repository on EC2 at `/opt/devops-pipeline`.
+```bash
+cd backend
+npm run seed
+```
 
-### 5) Trigger deployment
+Demo login:
 
-Push to `main` branch.
+- Email: `admin@example.com`
+- Password: `password123`
 
-## Screenshots
+### 4) Run the frontend
 
-Add screenshots after first deployment:
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-- GitHub Actions successful run
-- App home page via Nginx (`http://EC2_PUBLIC_IP`)
-- Grafana dashboard (`http://EC2_PUBLIC_IP:3000`)
-- Prometheus targets (`http://EC2_PUBLIC_IP:9090/targets`)
+Open `http://localhost:5173`.
+
+## Docker Compose Deployment
+
+Run the complete stack:
+
+```bash
+docker compose up --build -d
+```
+
+Application URLs:
+
+- CRM web app: `http://localhost`
+- API health: `http://localhost/api/health`
+- MongoDB: `localhost:27017`
+- Grafana: `http://localhost:3000`
+- Prometheus: `http://localhost:9090`
+- Loki: `http://localhost:3100`
+
+Seed data in the running API container:
+
+```bash
+docker compose exec api npm run seed
+```
+
+## Production Configuration
+
+Set these environment variables before deployment:
+
+- `JWT_SECRET`: long random signing secret for API tokens.
+- `CLIENT_ORIGIN`: public frontend origin when API CORS needs to be restricted.
+
+## API Overview
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/health` | API health check |
+| `POST` | `/api/auth/register` | Create a user and return a JWT |
+| `POST` | `/api/auth/login` | Authenticate and return a JWT |
+| `GET` | `/api/auth/me` | Return current authenticated user |
+| `GET` | `/api/customers` | List customers with optional `search` and `status` query params |
+| `POST` | `/api/customers` | Create a customer |
+| `PUT` | `/api/customers/:id` | Update a customer |
+| `DELETE` | `/api/customers/:id` | Delete a customer |
+| `GET` | `/api/dashboard/summary` | Return dashboard CRM metrics |
 
 ## Suggested Resume Line
 
-> Deployed a production-ready DevOps pipeline on AWS with CI/CD, Docker, Nginx, and monitoring stack (Prometheus + Grafana + Loki), with automated deployment and centralized logging.
-
-
-## DevOps Daily Operations Guide
-
-- Detailed practical daily task list: `docs/devops-daily-operations-playbook.md`
+> Built and deployed a MERN CRM system with JWT authentication, customer pipeline CRUD, MongoDB persistence, Dockerized services, Nginx reverse proxying, and Prometheus/Grafana/Loki observability.
